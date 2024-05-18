@@ -1,0 +1,38 @@
+Phase 1: Pre-Installation requirements
+apt-get install nano -y
+sudo bash 
+
+Phase 1.1: Setup necessary values for installation
+Copy + Paste Phase 2 + 3 to text editor outside of Ubuntu
+
+Replace password1 with your own password
+Replace IP_ADDRESS with the IP Address of the system
+
+Phase 2: Downloading Zabbix, MySQL & Apache Packages
+
+wget https://repo.zabbix.com/zabbix/6.4/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.4-1+ubuntu24.04_all.deb
+dpkg -i zabbix-release_6.4-1+ubuntu24.04_all.deb
+apt update
+apt install zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent
+
+Phase 3: Setting up an MySQL Database required for Zabbix
+
+mysql -uroot -p <- Enter root-password after running command
+create user zabbix@localhost identified by 'password1';
+grant all privileges on zabbix.* to zabbix@localhost;
+set global log_bin_trust_function_creators = 1;
+quit;
+
+zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -uzabbix -p zabbix <- This command is supposed to take a while to apply, this could take up a couple of minutes
+
+mysql -uroot -p
+set global log_bin_trust_function_creators = 0;
+quit; 
+
+nano /etc/zabbix/zabbix_server.conf
+Change Value from "DBPassword = password" to "DBPassword = password1". Save file when changed
+
+systemctl restart zabbix-server zabbix-agent apache2
+systemctl enable zabbix-server zabbix-agent apache2 
+
+Website should be available at http://IP_ADDRESS/zabbix
